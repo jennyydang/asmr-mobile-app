@@ -59,3 +59,28 @@ npx expo start
 Scan the QR code with Expo Go (iOS/Android) or press `i`/`a` for a
 simulator/emulator. Haptics require a real device — simulators can't
 render them.
+
+## Deploying the web build to Vercel
+
+This is a native-first app, but Expo can also export it as a static web
+build, which is what's deployed to Vercel. `vercel.json` and the
+`vercel-build` npm script are already set up for this — Vercel just needs
+the repo connected (via its GitHub integration or `vercel --prod`) and it
+will run:
+
+```sh
+npm run vercel-build   # -> expo export --platform web, output in dist/
+```
+
+Two things are different on the web build vs. the real app:
+
+- **Haptics degrade.** `expo-haptics` falls back to `navigator.vibrate()`
+  on Android Chrome only — there's no vibration API in iOS Safari, so
+  haptics are silent there. The touch/sound/visual interactions all still
+  work everywhere.
+- **Sound** still works in the browser (`expo-audio` has a web backend), but
+  browsers block audio until the user's first tap/gesture on the page —
+  totally fine here since every screen *is* tap-to-interact.
+
+For the full experience (real haptics on every trigger), install it as an
+actual app via Expo Go or an EAS build instead of the web version.
