@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { PanResponder, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
-import Svg, { Defs, Ellipse, LinearGradient, Path, Rect, Stop } from 'react-native-svg';
+import Svg, { Defs, Path, RadialGradient, Rect, Stop } from 'react-native-svg';
 
 import { useLoopingSound } from '../audio/useLoopingSound';
 import { haptics } from '../haptics/haptics';
 import { glossyShadow, theme } from '../theme';
+import { RimStrokeGradient, SpecularHighlight } from '../components/Gloss';
 import type { TriggerComponentProps } from '../screens/TriggerScreen';
 
 const CUT_LOOP = require('../../assets/sounds/soap_cut_loop.wav');
@@ -111,21 +112,27 @@ export default function SoapCutting({ resetSignal }: TriggerComponentProps) {
         >
           <Svg width={barWidth} height={barHeight} style={StyleSheet.absoluteFill}>
             <Defs>
-              <LinearGradient id="soapGrad" x1="0" y1="0" x2="1" y2="1">
-                <Stop offset="0%" stopColor="#faf3ff" />
-                <Stop offset="45%" stopColor="#e6d2fb" />
-                <Stop offset="100%" stopColor="#bd93f2" />
-              </LinearGradient>
+              <RadialGradient id="soapGrad" cx="34%" cy="26%" r="90%">
+                <Stop offset="0%" stopColor="#f3e4fc" />
+                <Stop offset="22%" stopColor="#deb9f5" />
+                <Stop offset="52%" stopColor="#c48ceb" />
+                <Stop offset="80%" stopColor="#a066d6" />
+                <Stop offset="100%" stopColor="#7d4bb8" />
+              </RadialGradient>
+              <RimStrokeGradient id="soapRim" />
             </Defs>
             <Rect x={0} y={0} width={barWidth} height={barHeight} rx={28} fill="url(#soapGrad)" />
-            <Ellipse
-              cx={barWidth * 0.3}
-              cy={barHeight * 0.28}
-              rx={barWidth * 0.26}
-              ry={barHeight * 0.16}
-              fill="#ffffff"
-              opacity={0.55}
+            <Rect
+              x={1}
+              y={1}
+              width={barWidth - 2}
+              height={barHeight - 2}
+              rx={27}
+              stroke="url(#soapRim)"
+              strokeWidth={3}
+              fill="none"
             />
+            <SpecularHighlight cx={barWidth * 0.28} cy={barHeight * 0.26} rx={barWidth * 0.13} ry={barHeight * 0.09} />
 
             {cuts.map((cut) => (
               <Path

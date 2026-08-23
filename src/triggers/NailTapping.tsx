@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
 import { Animated, Pressable, StyleSheet, Text, View } from 'react-native';
-import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
+import Svg, { Defs, Ellipse, LinearGradient, RadialGradient, Rect, Stop } from 'react-native-svg';
 
 import { useSoundPool } from '../audio/useSoundPool';
 import { haptics } from '../haptics/haptics';
 import { glossyShadow, theme } from '../theme';
+import { RimStrokeGradient, SpecularHighlight } from '../components/Gloss';
 import type { TriggerComponentProps } from '../screens/TriggerScreen';
 
 const NAIL_SOURCES = [
@@ -14,14 +15,20 @@ const NAIL_SOURCES = [
 ];
 
 const NAIL_COLORS = ['#f2a6c8', '#f4c98b', '#e6789c', '#c98bf4', '#f28ba2'];
+const FINGER_W = 46;
+const FINGER_H = 120;
 
 interface NailProps {
   color: string;
+  index: number;
   onTap: () => void;
 }
 
-function Nail({ color, onTap }: NailProps) {
+function Nail({ color, index, onTap }: NailProps) {
   const scale = useRef(new Animated.Value(1)).current;
+  const skinId = `skin-${index}`;
+  const nailId = `nail-${index}`;
+  const rimId = `nailRim-${index}`;
 
   function handlePressIn() {
     scale.stopAnimation();
@@ -34,10 +41,33 @@ function Nail({ color, onTap }: NailProps) {
 
   return (
     <Pressable onPressIn={handlePressIn} style={styles.nailTouchArea}>
-      <Animated.View style={[styles.finger, { transform: [{ scale }] }]}>
-        <View style={[styles.nail, { backgroundColor: color }]}>
-          <View style={styles.nailShine} />
-        </View>
+      <Animated.View style={{ transform: [{ scale }] }}>
+        <Svg width={FINGER_W} height={FINGER_H}>
+          <Defs>
+            <LinearGradient id={skinId} x1="0%" y1="0%" x2="100%" y2="0%">
+              <Stop offset="0%" stopColor="#d99f6c" />
+              <Stop offset="20%" stopColor="#f6d3ac" />
+              <Stop offset="55%" stopColor="#f3caa1" />
+              <Stop offset="85%" stopColor="#e4ac79" />
+              <Stop offset="100%" stopColor="#c98e5c" />
+            </LinearGradient>
+            <RadialGradient id={nailId} cx="35%" cy="25%" r="85%">
+              <Stop offset="0%" stopColor="#ffffff" />
+              <Stop offset="30%" stopColor={color} stopOpacity={0.55} />
+              <Stop offset="70%" stopColor={color} />
+              <Stop offset="100%" stopColor={color} />
+            </RadialGradient>
+            <RimStrokeGradient id={rimId} />
+          </Defs>
+
+          {/* fingertip, shaded like a cylinder catching light from the left */}
+          <Rect x={0} y={0} width={FINGER_W} height={FINGER_H} rx={FINGER_W / 2} fill={`url(#${skinId})`} />
+
+          {/* nail bed */}
+          <Ellipse cx={FINGER_W / 2} cy={26} rx={14} ry={18} fill={`url(#${nailId})`} />
+          <Ellipse cx={FINGER_W / 2} cy={26} rx={14} ry={18} fill="none" stroke={`url(#${rimId})`} strokeWidth={1.4} />
+          <SpecularHighlight cx={FINGER_W / 2 - 4} cy={18} rx={4.5} ry={3} />
+        </Svg>
       </Animated.View>
     </Pressable>
   );
@@ -74,7 +104,7 @@ export default function NailTapping({ resetSignal }: TriggerComponentProps) {
 
         <View style={styles.row}>
           {NAIL_COLORS.map((color, i) => (
-            <Nail key={i} color={color} onTap={() => handleTap(i)} />
+            <Nail key={i} index={i} color={color} onTap={() => handleTap(i)} />
           ))}
         </View>
       </View>
@@ -115,33 +145,6 @@ const styles = StyleSheet.create({
   nailTouchArea: {
     paddingHorizontal: 8,
     paddingVertical: 12,
-  },
-  finger: {
-    width: 46,
-    height: 120,
-    borderRadius: 23,
-    backgroundColor: '#f3caa1',
-    alignItems: 'center',
-    paddingTop: 10,
-    shadowColor: '#000',
-    shadowOpacity: 0.15,
-    shadowOffset: { width: 0, height: 4 },
-    shadowRadius: 6,
-  },
-  nail: {
-    width: 30,
-    height: 38,
-    borderRadius: 15,
-    overflow: 'hidden',
-  },
-  nailShine: {
-    position: 'absolute',
-    top: 4,
-    left: 6,
-    width: 10,
-    height: 16,
-    borderRadius: 6,
-    backgroundColor: 'rgba(255,255,255,0.55)',
   },
   hintPill: {
     backgroundColor: theme.surface,

@@ -40,7 +40,8 @@ function Key({ label, width, flexGrow, onPress }: KeyProps) {
         pressed && styles.keyPressed,
       ]}
     >
-      <View style={styles.keyShine} />
+      <View style={styles.keyTopHalf} />
+      <View style={styles.keyCornerGlow} />
       <Text style={styles.keyLabel}>{label}</Text>
     </Pressable>
   );
@@ -161,9 +162,9 @@ const styles = StyleSheet.create({
   key: {
     height: 48,
     borderRadius: 12,
-    backgroundColor: '#e4e9ff',
-    borderBottomWidth: 3,
-    borderBottomColor: '#b9c2f2',
+    backgroundColor: '#c2cbf7',
+    borderBottomWidth: 4,
+    borderBottomColor: '#9aa5e8',
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
@@ -171,16 +172,29 @@ const styles = StyleSheet.create({
   keyPressed: {
     backgroundColor: '#c7d0fb',
     borderBottomWidth: 0,
-    transform: [{ translateY: 3 }],
+    transform: [{ translateY: 4 }],
   },
-  keyShine: {
+  // Two-tone vertical fill fakes a gradient without needing a per-key SVG —
+  // combined with the corner glow and bottom "skirt" border, it reads as a
+  // domed, glossy keycap rather than a flat tinted rectangle.
+  keyTopHalf: {
     position: 'absolute',
-    top: 3,
-    left: 4,
-    right: 4,
-    height: '38%',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: '58%',
+    backgroundColor: '#eef1ff',
+    borderTopLeftRadius: 12,
+    borderTopRightRadius: 12,
+  },
+  keyCornerGlow: {
+    position: 'absolute',
+    top: 4,
+    left: 6,
+    width: 16,
+    height: 16,
     borderRadius: 8,
-    backgroundColor: 'rgba(255,255,255,0.55)',
+    backgroundColor: 'rgba(255,255,255,0.7)',
   },
   keyLabel: {
     color: '#33397a',

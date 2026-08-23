@@ -5,6 +5,7 @@ import Svg, { Defs, Path, RadialGradient, Rect, Stop } from 'react-native-svg';
 import { useSoundPool } from '../audio/useSoundPool';
 import { haptics } from '../haptics/haptics';
 import { glossyShadow, theme } from '../theme';
+import { RimStrokeGradient, SpecularHighlight } from '../components/Gloss';
 import type { TriggerComponentProps } from '../screens/TriggerScreen';
 
 const POP_SOURCES = [
@@ -31,23 +32,22 @@ interface HeartProps {
 }
 
 function Heart({ size, popped, gradientId }: HeartProps) {
+  const rimId = `${gradientId}-rim`;
   return (
     <Svg width={size} height={size} viewBox="-13 -14 26 26">
       <Defs>
-        <RadialGradient id={gradientId} cx="35%" cy="25%" r="80%">
-          <Stop offset="0%" stopColor={popped ? '#c9b3e6' : '#faf3ff'} />
-          <Stop offset="45%" stopColor={popped ? '#b69bd9' : '#dcbdf7'} />
-          <Stop offset="100%" stopColor={popped ? '#a68ad1' : '#b287e8'} />
+        <RadialGradient id={gradientId} cx="34%" cy="24%" r="85%">
+          <Stop offset="0%" stopColor={popped ? '#d2bfe8' : '#fef9ff'} />
+          <Stop offset="24%" stopColor={popped ? '#c2a9de' : '#e8cffa'} />
+          <Stop offset="55%" stopColor={popped ? '#ab8ed1' : '#c99cf0'} />
+          <Stop offset="82%" stopColor={popped ? '#8a6cb8' : '#9d68d9'} />
+          <Stop offset="100%" stopColor={popped ? '#725aa0' : '#7d4bc4'} />
         </RadialGradient>
+        <RimStrokeGradient id={rimId} />
       </Defs>
-      <Path
-        d={HEART_D}
-        fill={`url(#${gradientId})`}
-        stroke={popped ? 'rgba(90,60,130,0.35)' : 'rgba(255,255,255,0.6)'}
-        strokeWidth={popped ? 0.6 : 1}
-        opacity={popped ? 0.75 : 1}
-      />
-      {!popped && <Path d="M-6,-7 C-4,-9.5 -1.5,-9.5 -0.5,-8" stroke="#ffffff" strokeWidth={1.4} strokeOpacity={0.75} fill="none" strokeLinecap="round" />}
+      <Path d={HEART_D} fill={`url(#${gradientId})`} opacity={popped ? 0.8 : 1} />
+      <Path d={HEART_D} stroke={`url(#${rimId})`} strokeWidth={popped ? 0.5 : 1.1} fill="none" opacity={popped ? 0.6 : 1} />
+      {!popped && <SpecularHighlight cx={-3.2} cy={-6.2} rx={2.6} ry={1.9} rotation={-25} />}
     </Svg>
   );
 }

@@ -15,6 +15,7 @@ import Svg, {
 import { useSoundPool } from '../audio/useSoundPool';
 import { haptics } from '../haptics/haptics';
 import { theme } from '../theme';
+import { EdgeShade, RimLight, SpecularHighlight, ellipseArcPath } from '../components/Gloss';
 import type { TriggerComponentProps } from '../screens/TriggerScreen';
 
 const CRACK_SOURCES = [
@@ -208,16 +209,20 @@ export default function WaxCracking({ resetSignal }: TriggerComponentProps) {
       {size.width > 0 && (
         <Svg width={size.width} height={size.height} style={StyleSheet.absoluteFill}>
           <Defs>
-            <RadialGradient id="waxGrad" cx="38%" cy="28%" r="80%">
-              <Stop offset="0%" stopColor="#fff3cf" />
-              <Stop offset="45%" stopColor="#f7cf6d" />
-              <Stop offset="80%" stopColor="#e2a53a" />
-              <Stop offset="100%" stopColor="#c17f22" />
+            <RadialGradient id="waxGrad" cx="36%" cy="26%" r="85%">
+              <Stop offset="0%" stopColor="#fff8e0" />
+              <Stop offset="30%" stopColor="#fadb84" />
+              <Stop offset="60%" stopColor="#eab34a" />
+              <Stop offset="82%" stopColor="#c9852a" />
+              <Stop offset="94%" stopColor="#a86a1e" />
+              <Stop offset="100%" stopColor="#c9942f" />
             </RadialGradient>
             <LinearGradient id="stickGrad" x1="0" y1="0" x2="1" y2="0">
-              <Stop offset="0%" stopColor="#e7c495" />
+              <Stop offset="0%" stopColor="#c99a5e" />
+              <Stop offset="18%" stopColor="#f6e2ba" />
               <Stop offset="45%" stopColor="#f3dcb0" />
-              <Stop offset="100%" stopColor="#cfa163" />
+              <Stop offset="80%" stopColor="#d3a568" />
+              <Stop offset="100%" stopColor="#a97b40" />
             </LinearGradient>
             <RadialGradient id="dropShadow" cx="50%" cy="50%" r="50%">
               <Stop offset="0%" stopColor="#000" stopOpacity={0.16} />
@@ -246,7 +251,8 @@ export default function WaxCracking({ resetSignal }: TriggerComponentProps) {
             rx={stickWidth * 0.3}
             fill="url(#stickGrad)"
           />
-          <Rect x={head.cx - 2} y={stickTop + 6} width={1.4} height={stickHeight - 12} fill="#b98a4d" opacity={0.5} />
+          <Rect x={head.cx - stickWidth * 0.28} y={stickTop + 4} width={2} height={stickHeight - 10} fill="#fff3d6" opacity={0.55} />
+          <Rect x={head.cx + stickWidth * 0.2} y={stickTop + 6} width={1.4} height={stickHeight - 12} fill="#8a6432" opacity={0.4} />
 
           {/* pop head, clipped so cracks/chips never spill outside the shape */}
           <G clipPath="url(#headClip)">
@@ -254,14 +260,21 @@ export default function WaxCracking({ resetSignal }: TriggerComponentProps) {
             {freckles.map((f, i) => (
               <Ellipse key={i} cx={f.x} cy={f.y} rx={f.r} ry={f.r * 0.7} fill="#fff8e2" opacity={0.28} />
             ))}
-            {/* glossy specular highlight */}
-            <Ellipse
+
+            {/* rim light (light source) and edge shade (opposite side) trace the curve */}
+            <RimLight d={ellipseArcPath(head.cx, head.cy, head.rx * 0.97, head.ry * 0.97, 200, 300)} opacity={0.5} width={3} />
+            <EdgeShade
+              d={ellipseArcPath(head.cx, head.cy, head.rx * 0.97, head.ry * 0.97, 20, 120)}
+              color="#7a4d15"
+              opacity={0.35}
+              width={4}
+            />
+
+            <SpecularHighlight
               cx={head.cx - head.rx * 0.32}
               cy={head.cy - head.ry * 0.42}
-              rx={head.rx * 0.32}
-              ry={head.ry * 0.2}
-              fill="#ffffff"
-              opacity={0.55}
+              rx={head.rx * 0.28}
+              ry={head.ry * 0.18}
             />
 
             {cracks.map((crack) => (
@@ -306,7 +319,7 @@ export default function WaxCracking({ resetSignal }: TriggerComponentProps) {
       )}
 
       {cracks.length === 0 && chips.length === 0 && (
-        <View pointerEvents="none" style={[styles.hintWrap, { top: stickTop + 36 }]}>
+        <View pointerEvents="none" style={[styles.hintWrap, { top: head.cy + head.ry + 20 }]}>
           <View style={styles.hintPill}>
             <Text style={styles.hint}>DRAG TO CRACK</Text>
           </View>

@@ -6,6 +6,7 @@ import { useLoopingSound } from '../audio/useLoopingSound';
 import { useSoundPool } from '../audio/useSoundPool';
 import { haptics } from '../haptics/haptics';
 import { theme } from '../theme';
+import { RimStrokeGradient, SpecularHighlight } from '../components/Gloss';
 import type { TriggerComponentProps } from '../screens/TriggerScreen';
 
 const SQUISH_LOOP = require('../../assets/sounds/slime_squish_loop.wav');
@@ -196,22 +197,30 @@ export default function Slime({ resetSignal }: TriggerComponentProps) {
           <Animated.View style={[StyleSheet.absoluteFill, { transform: [{ scale: idleScale }] }]}>
             <Svg width={size.width} height={size.height}>
               <Defs>
-                <RadialGradient id="slimeGrad" cx="38%" cy="28%" r="75%">
-                  <Stop offset="0%" stopColor="#ccf9c9" />
-                  <Stop offset="45%" stopColor="#7bdd8e" />
-                  <Stop offset="85%" stopColor="#3fb862" />
-                  <Stop offset="100%" stopColor="#278a4c" />
+                <RadialGradient id="slimeGrad" cx="36%" cy="26%" r="80%">
+                  <Stop offset="0%" stopColor="#e2ffdc" />
+                  <Stop offset="26%" stopColor="#a6efa9" />
+                  <Stop offset="55%" stopColor="#5bcf76" />
+                  <Stop offset="80%" stopColor="#329654" />
+                  <Stop offset="100%" stopColor="#1f6e3c" />
                 </RadialGradient>
+                <RimStrokeGradient id="slimeRim" />
               </Defs>
               <Path d={path} fill="url(#slimeGrad)" />
-              {!touch && (
-                <Ellipse
-                  cx={center.x - BASE_RADIUS * 0.32}
-                  cy={center.y - BASE_RADIUS * 0.4}
-                  rx={BASE_RADIUS * 0.28}
-                  ry={BASE_RADIUS * 0.17}
-                  fill="#ffffff"
-                  opacity={0.6}
+              <Path d={path} stroke="url(#slimeRim)" strokeWidth={4} fill="none" />
+
+              <SpecularHighlight
+                cx={center.x - BASE_RADIUS * 0.32}
+                cy={center.y - BASE_RADIUS * 0.4}
+                rx={BASE_RADIUS * 0.26}
+                ry={BASE_RADIUS * 0.16}
+              />
+              {touch && (
+                <SpecularHighlight
+                  cx={touch.x - (touch.x - center.x) * 0.15}
+                  cy={touch.y - (touch.y - center.y) * 0.15}
+                  rx={TIP_RADIUS * 0.4}
+                  ry={TIP_RADIUS * 0.3}
                 />
               )}
             </Svg>
