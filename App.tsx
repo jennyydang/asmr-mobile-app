@@ -1,11 +1,12 @@
 import { useEffect } from 'react';
-import { NavigationContainer, DarkTheme } from '@react-navigation/native';
+import { NavigationContainer, DefaultTheme, type Theme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { setAudioModeAsync } from 'expo-audio';
 
 import HomeScreen from './src/screens/HomeScreen';
 import TriggerScreen from './src/screens/TriggerScreen';
 import type { TriggerId } from './src/data/triggers';
+import { theme } from './src/theme';
 
 export type RootStackParamList = {
   Home: undefined;
@@ -13,6 +14,11 @@ export type RootStackParamList = {
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
+
+const AppTheme: Theme = {
+  ...DefaultTheme,
+  colors: { ...DefaultTheme.colors, background: theme.background, text: theme.textPrimary },
+};
 
 export default function App() {
   useEffect(() => {
@@ -24,7 +30,7 @@ export default function App() {
   }, []);
 
   return (
-    <NavigationContainer theme={DarkTheme}>
+    <NavigationContainer theme={AppTheme}>
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen

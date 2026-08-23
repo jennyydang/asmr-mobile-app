@@ -5,52 +5,52 @@ export interface TriggerMeta {
   title: string;
   subtitle: string;
   emoji: string;
-  /** [background, accent] */
+  /** [light pastel card tint, deeper accent for gloss/shadow] */
   colors: [string, string];
 }
 
 export const TRIGGERS: TriggerMeta[] = [
   {
     id: 'wax',
-    title: 'Wax Cracking',
+    title: 'Wax Pop',
     subtitle: 'Snap warm wax into shards',
     emoji: '🕯️',
-    colors: ['#3a2313', '#f2a93b'],
+    colors: ['#fff3d6', '#e0a72e'],
   },
   {
     id: 'nails',
     title: 'Nail Tapping',
     subtitle: 'Tap tap tap on the desk',
     emoji: '💅',
-    colors: ['#341522', '#ef7fb0'],
+    colors: ['#ffe3ee', '#e0678f'],
   },
   {
     id: 'slime',
     title: 'Slime',
     subtitle: 'Stretch, squish, and pop',
     emoji: '🟢',
-    colors: ['#0f3320', '#59d17f'],
+    colors: ['#e3f9e5', '#2f9e57'],
   },
   {
     id: 'keyboard',
     title: 'Keyboard',
     subtitle: 'Clicky mechanical keys',
     emoji: '⌨️',
-    colors: ['#141a33', '#7c93ff'],
+    colors: ['#e8ecff', '#5064c9'],
   },
   {
     id: 'bubbleWrap',
     title: 'Bubble Wrap',
-    subtitle: 'Pop every last bubble',
+    subtitle: 'Pop every last heart',
     emoji: '🫧',
-    colors: ['#0d2b3a', '#5cc8f2'],
+    colors: ['#f1e6ff', '#9b6fd6'],
   },
   {
     id: 'soap',
     title: 'Soap Cutting',
     subtitle: 'Smooth, soft slicing',
     emoji: '🧼',
-    colors: ['#2a1f3d', '#b98cf2'],
+    colors: ['#f4ecff', '#9868d9'],
   },
 ];
 

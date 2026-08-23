@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { PanResponder, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
-import Svg, { Defs, LinearGradient, Path, Rect, Stop } from 'react-native-svg';
+import Svg, { Defs, Ellipse, LinearGradient, Path, Rect, Stop } from 'react-native-svg';
 
 import { useLoopingSound } from '../audio/useLoopingSound';
 import { haptics } from '../haptics/haptics';
+import { glossyShadow, theme } from '../theme';
 import type { TriggerComponentProps } from '../screens/TriggerScreen';
 
 const CUT_LOOP = require('../../assets/sounds/soap_cut_loop.wav');
@@ -24,7 +25,7 @@ function pathFromPoints(points: Point[]): string {
 }
 
 export default function SoapCutting({ resetSignal }: TriggerComponentProps) {
-  const [size, setSize] = useState({ width: 0, height: 0 });
+  const [outerWidth, setOuterWidth] = useState(0);
   const [cuts, setCuts] = useState<Cut[]>([]);
 
   const cutIdRef = useRef(0);
@@ -38,8 +39,8 @@ export default function SoapCutting({ resetSignal }: TriggerComponentProps) {
     setCuts([]);
   }, [resetSignal]);
 
-  function onLayout(e: LayoutChangeEvent) {
-    setSize(e.nativeEvent.layout);
+  function onOuterLayout(e: LayoutChangeEvent) {
+    setOuterWidth(e.nativeEvent.layout.width);
   }
 
   function beginCut(point: Point) {
@@ -98,51 +99,65 @@ export default function SoapCutting({ resetSignal }: TriggerComponentProps) {
     []
   );
 
+  const barWidth = outerWidth > 0 ? Math.min(outerWidth - 56, 320) : 0;
+  const barHeight = barWidth * 0.6;
+
   return (
-    <View style={styles.container} onLayout={onLayout} {...panResponder.panHandlers}>
-      {size.width > 0 && (
-        <Svg width={size.width} height={size.height} style={StyleSheet.absoluteFill}>
-          <Defs>
-            <LinearGradient id="soapGrad" x1="0" y1="0" x2="1" y2="1">
-              <Stop offset="0%" stopColor="#f4ecff" />
-              <Stop offset="55%" stopColor="#dcc4f7" />
-              <Stop offset="100%" stopColor="#b98cf2" />
-            </LinearGradient>
-          </Defs>
-          <Rect x={0} y={0} width={size.width} height={size.height} rx={28} fill="url(#soapGrad)" />
+    <View style={styles.container} onLayout={onOuterLayout}>
+      {barWidth > 0 && (
+        <View
+          style={[styles.bar, glossyShadow, { width: barWidth, height: barHeight }]}
+          {...panResponder.panHandlers}
+        >
+          <Svg width={barWidth} height={barHeight} style={StyleSheet.absoluteFill}>
+            <Defs>
+              <LinearGradient id="soapGrad" x1="0" y1="0" x2="1" y2="1">
+                <Stop offset="0%" stopColor="#faf3ff" />
+                <Stop offset="45%" stopColor="#e6d2fb" />
+                <Stop offset="100%" stopColor="#bd93f2" />
+              </LinearGradient>
+            </Defs>
+            <Rect x={0} y={0} width={barWidth} height={barHeight} rx={28} fill="url(#soapGrad)" />
+            <Ellipse
+              cx={barWidth * 0.3}
+              cy={barHeight * 0.28}
+              rx={barWidth * 0.26}
+              ry={barHeight * 0.16}
+              fill="#ffffff"
+              opacity={0.55}
+            />
 
-          {cuts.map((cut) => (
-            <Path
-              key={cut.id}
-              d={pathFromPoints(cut.points)}
-              stroke="#5c3d85"
-              strokeOpacity={0.35}
-              strokeWidth={4}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              fill="none"
-            />
-          ))}
-          {cuts.map((cut) => (
-            <Path
-              key={`${cut.id}-hi`}
-              d={pathFromPoints(cut.points)}
-              stroke="#ffffff"
-              strokeOpacity={0.5}
-              strokeWidth={1.2}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              fill="none"
-            />
-          ))}
-        </Svg>
+            {cuts.map((cut) => (
+              <Path
+                key={cut.id}
+                d={pathFromPoints(cut.points)}
+                stroke="#5c3d85"
+                strokeOpacity={0.35}
+                strokeWidth={4}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                fill="none"
+              />
+            ))}
+            {cuts.map((cut) => (
+              <Path
+                key={`${cut.id}-hi`}
+                d={pathFromPoints(cut.points)}
+                stroke="#ffffff"
+                strokeOpacity={0.6}
+                strokeWidth={1.2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                fill="none"
+              />
+            ))}
+          </Svg>
+        </View>
       )}
 
-      {cuts.length === 0 && (
-        <Text style={styles.hint} pointerEvents="none">
-          Drag across the bar to slice off a sliver
-        </Text>
-      )}
+      <View style={styles.hintPill}>
+        <Text style={styles.hint}>DRAG TO SLICE</Text>
+      </View>
     </View>
   );
 }
@@ -150,16 +165,29 @@ export default function SoapCutting({ resetSignal }: TriggerComponentProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    margin: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 24,
+  },
+  bar: {
     borderRadius: 28,
     overflow: 'hidden',
   },
+  hintPill: {
+    backgroundColor: theme.surface,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    shadowColor: 'rgba(20,20,30,0.2)',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 10,
+    elevation: 4,
+  },
   hint: {
-    position: 'absolute',
-    bottom: 28,
-    alignSelf: 'center',
-    color: 'rgba(92,61,133,0.7)',
-    fontSize: 14,
-    fontWeight: '600',
+    color: theme.textPrimary,
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 1,
   },
 });

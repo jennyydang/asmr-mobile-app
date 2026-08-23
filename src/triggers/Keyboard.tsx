@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View, type LayoutChangeEvent } from 'react
 
 import { useSoundPool } from '../audio/useSoundPool';
 import { haptics } from '../haptics/haptics';
+import { glossyShadow, pillShadow, theme } from '../theme';
 import type { TriggerComponentProps } from '../screens/TriggerScreen';
 
 const KEY_SOURCES = [
@@ -19,8 +20,8 @@ const ROWS = [
 ];
 
 const MAX_DISPLAY_CHARS = 60;
-const GAP = 6;
-const H_PADDING = 12;
+const GAP = 7;
+const H_PADDING = 14;
 
 interface KeyProps {
   label: string;
@@ -39,6 +40,7 @@ function Key({ label, width, flexGrow, onPress }: KeyProps) {
         pressed && styles.keyPressed,
       ]}
     >
+      <View style={styles.keyShine} />
       <Text style={styles.keyLabel}>{label}</Text>
     </Pressable>
   );
@@ -79,12 +81,12 @@ export default function Keyboard({ resetSignal }: TriggerComponentProps) {
 
   return (
     <View style={styles.container} onLayout={onLayout}>
-      <View style={styles.display}>
+      <View style={[styles.display, pillShadow]}>
         <Text style={styles.displayText} numberOfLines={2}>
           {typed}
           <Text style={styles.cursor}>|</Text>
         </Text>
-        {typed.length === 0 && <Text style={styles.displayHint}>Type anything — it's just for the sound</Text>}
+        {typed.length === 0 && <Text style={styles.displayHint}>TYPE ANYTHING — IT'S JUST FOR THE SOUND</Text>}
       </View>
 
       {width > 0 && (
@@ -117,32 +119,36 @@ export default function Keyboard({ resetSignal }: TriggerComponentProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    margin: 16,
-    borderRadius: 28,
-    overflow: 'hidden',
-    backgroundColor: '#141a33',
-    padding: 12,
+    padding: 16,
   },
   display: {
-    flex: 1,
+    ...glossyShadow,
+    minHeight: 96,
     justifyContent: 'center',
-    paddingHorizontal: 8,
-    paddingBottom: 12,
+    paddingHorizontal: 18,
+    paddingVertical: 16,
+    marginTop: 8,
+    marginBottom: 20,
+    backgroundColor: theme.surface,
+    borderRadius: 22,
   },
   displayText: {
-    color: '#fff',
+    color: theme.textPrimary,
     fontSize: 22,
-    fontWeight: '600',
+    fontWeight: '700',
     lineHeight: 30,
   },
   cursor: {
-    color: '#7c93ff',
+    color: '#5064c9',
     fontWeight: '300',
   },
   displayHint: {
     position: 'absolute',
-    color: 'rgba(255,255,255,0.4)',
-    fontSize: 14,
+    left: 18,
+    color: theme.textSecondary,
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 0.5,
   },
   keys: {
     gap: GAP,
@@ -153,19 +159,32 @@ const styles = StyleSheet.create({
     gap: GAP,
   },
   key: {
-    height: 46,
-    borderRadius: 10,
-    backgroundColor: 'rgba(255,255,255,0.12)',
+    height: 48,
+    borderRadius: 12,
+    backgroundColor: '#e4e9ff',
+    borderBottomWidth: 3,
+    borderBottomColor: '#b9c2f2',
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
   },
   keyPressed: {
-    backgroundColor: 'rgba(124,147,255,0.55)',
-    transform: [{ translateY: 2 }],
+    backgroundColor: '#c7d0fb',
+    borderBottomWidth: 0,
+    transform: [{ translateY: 3 }],
+  },
+  keyShine: {
+    position: 'absolute',
+    top: 3,
+    left: 4,
+    right: 4,
+    height: '38%',
+    borderRadius: 8,
+    backgroundColor: 'rgba(255,255,255,0.55)',
   },
   keyLabel: {
-    color: '#fff',
+    color: '#33397a',
     fontSize: 15,
-    fontWeight: '700',
+    fontWeight: '800',
   },
 });

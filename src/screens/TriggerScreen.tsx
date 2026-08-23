@@ -7,6 +7,7 @@ import type { RootStackParamList } from '../../App';
 import { getTrigger } from '../data/triggers';
 import { ScreenHeader } from '../components/ScreenHeader';
 import { haptics } from '../haptics/haptics';
+import { theme } from '../theme';
 
 import WaxCracking from '../triggers/WaxCracking';
 import NailTapping from '../triggers/NailTapping';
@@ -36,8 +37,8 @@ export default function TriggerScreen({ route }: Props) {
   const Component = TRIGGER_COMPONENTS[trigger.id];
 
   return (
-    <View style={[styles.screen, { backgroundColor: trigger.colors[0] }]}>
-      <StatusBar style="light" />
+    <View style={styles.screen}>
+      <StatusBar style="dark" />
       <SafeAreaView style={styles.safeTop} edges={['top']}>
         <ScreenHeader
           title={trigger.title}
@@ -58,6 +59,7 @@ export default function TriggerScreen({ route }: Props) {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
+    backgroundColor: theme.background,
   },
   safeTop: {
     zIndex: 10,

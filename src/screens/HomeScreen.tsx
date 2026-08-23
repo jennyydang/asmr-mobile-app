@@ -5,6 +5,7 @@ import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../../App';
 import { TRIGGERS, type TriggerMeta } from '../data/triggers';
 import { haptics } from '../haptics/haptics';
+import { pillShadow, theme } from '../theme';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 
@@ -16,10 +17,10 @@ export default function HomeScreen({ navigation }: Props) {
 
   return (
     <SafeAreaView style={styles.screen} edges={['top', 'bottom']}>
-      <StatusBar style="light" />
+      <StatusBar style="dark" />
       <View style={styles.headerBlock}>
         <Text style={styles.eyebrow}>TOUCH ASMR</Text>
-        <Text style={styles.title}>Tap. Drag. Relax.</Text>
+        <Text style={styles.title}>TAP. DRAG. RELAX.</Text>
         <Text style={styles.subtitle}>
           Pick a trigger below — everything responds to your touch with sound and haptics.
         </Text>
@@ -36,11 +37,14 @@ export default function HomeScreen({ navigation }: Props) {
             onPress={() => openTrigger(item)}
             style={({ pressed }) => [
               styles.card,
-              { backgroundColor: item.colors[0], borderColor: item.colors[1] },
+              pillShadow,
+              { backgroundColor: item.colors[0] },
               pressed && styles.cardPressed,
             ]}
           >
-            <Text style={styles.emoji}>{item.emoji}</Text>
+            <View style={[styles.iconBubble, { backgroundColor: item.colors[1] }]}>
+              <Text style={styles.emoji}>{item.emoji}</Text>
+            </View>
             <Text style={styles.cardTitle}>{item.title}</Text>
             <Text style={styles.cardSubtitle}>{item.subtitle}</Text>
           </Pressable>
@@ -53,7 +57,7 @@ export default function HomeScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#0b0b12',
+    backgroundColor: theme.background,
   },
   headerBlock: {
     paddingHorizontal: 24,
@@ -61,20 +65,21 @@ const styles = StyleSheet.create({
     paddingBottom: 20,
   },
   eyebrow: {
-    color: '#8f8fb3',
+    color: theme.textSecondary,
     fontSize: 12,
     fontWeight: '700',
     letterSpacing: 2,
     marginBottom: 6,
   },
   title: {
-    color: '#fff',
-    fontSize: 30,
+    color: theme.textPrimary,
+    fontSize: 28,
     fontWeight: '800',
+    letterSpacing: 0.5,
     marginBottom: 8,
   },
   subtitle: {
-    color: '#b7b7d1',
+    color: theme.textSecondary,
     fontSize: 14,
     lineHeight: 20,
   },
@@ -90,26 +95,32 @@ const styles = StyleSheet.create({
     flex: 1,
     aspectRatio: 1,
     borderRadius: 24,
-    borderWidth: 1.5,
     padding: 18,
     justifyContent: 'flex-end',
   },
   cardPressed: {
-    opacity: 0.8,
+    opacity: 0.9,
     transform: [{ scale: 0.98 }],
   },
+  iconBubble: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
   emoji: {
-    fontSize: 40,
-    marginBottom: 10,
+    fontSize: 22,
   },
   cardTitle: {
-    color: '#fff',
-    fontSize: 18,
+    color: theme.textPrimary,
+    fontSize: 17,
     fontWeight: '800',
     marginBottom: 4,
   },
   cardSubtitle: {
-    color: 'rgba(255,255,255,0.85)',
+    color: theme.textSecondary,
     fontSize: 12.5,
     lineHeight: 17,
   },

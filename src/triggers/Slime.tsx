@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Animated, Easing, PanResponder, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-native';
-import Svg, { Defs, Path, RadialGradient, Stop } from 'react-native-svg';
+import Svg, { Defs, Ellipse, Path, RadialGradient, Stop } from 'react-native-svg';
 
 import { useLoopingSound } from '../audio/useLoopingSound';
 import { useSoundPool } from '../audio/useSoundPool';
 import { haptics } from '../haptics/haptics';
+import { theme } from '../theme';
 import type { TriggerComponentProps } from '../screens/TriggerScreen';
 
 const SQUISH_LOOP = require('../../assets/sounds/slime_squish_loop.wav');
@@ -181,24 +182,49 @@ export default function Slime({ resetSignal }: TriggerComponentProps) {
   return (
     <View style={styles.container} onLayout={onLayout} {...panResponder.panHandlers}>
       {size.width > 0 && (
-        <Animated.View style={[StyleSheet.absoluteFill, { transform: [{ scale: idleScale }] }]}>
-          <Svg width={size.width} height={size.height}>
+        <>
+          <Svg width={size.width} height={size.height} style={StyleSheet.absoluteFill}>
             <Defs>
-              <RadialGradient id="slimeGrad" cx="45%" cy="35%" r="70%">
-                <Stop offset="0%" stopColor="#a8f2b0" />
-                <Stop offset="55%" stopColor="#59d17f" />
-                <Stop offset="100%" stopColor="#278a4c" />
+              <RadialGradient id="slimeShadow" cx="50%" cy="50%" r="50%">
+                <Stop offset="0%" stopColor="#000" stopOpacity={0.16} />
+                <Stop offset="100%" stopColor="#000" stopOpacity={0} />
               </RadialGradient>
             </Defs>
-            <Path d={path} fill="url(#slimeGrad)" />
+            <Ellipse cx={center.x} cy={center.y + BASE_RADIUS * 0.75} rx={BASE_RADIUS * 0.9} ry={16} fill="url(#slimeShadow)" />
           </Svg>
-        </Animated.View>
+
+          <Animated.View style={[StyleSheet.absoluteFill, { transform: [{ scale: idleScale }] }]}>
+            <Svg width={size.width} height={size.height}>
+              <Defs>
+                <RadialGradient id="slimeGrad" cx="38%" cy="28%" r="75%">
+                  <Stop offset="0%" stopColor="#ccf9c9" />
+                  <Stop offset="45%" stopColor="#7bdd8e" />
+                  <Stop offset="85%" stopColor="#3fb862" />
+                  <Stop offset="100%" stopColor="#278a4c" />
+                </RadialGradient>
+              </Defs>
+              <Path d={path} fill="url(#slimeGrad)" />
+              {!touch && (
+                <Ellipse
+                  cx={center.x - BASE_RADIUS * 0.32}
+                  cy={center.y - BASE_RADIUS * 0.4}
+                  rx={BASE_RADIUS * 0.28}
+                  ry={BASE_RADIUS * 0.17}
+                  fill="#ffffff"
+                  opacity={0.6}
+                />
+              )}
+            </Svg>
+          </Animated.View>
+        </>
       )}
 
       {!touch && (
-        <Text style={styles.hint} pointerEvents="none">
-          Press and drag to stretch the slime
-        </Text>
+        <View pointerEvents="none" style={styles.hintWrap}>
+          <View style={styles.hintPill}>
+            <Text style={styles.hint}>DRAG TO STRETCH</Text>
+          </View>
+        </View>
       )}
     </View>
   );
@@ -211,18 +237,31 @@ function circlePath(c: Point, r: number): string {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    margin: 16,
-    borderRadius: 28,
-    overflow: 'hidden',
-    backgroundColor: '#0f3320',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  hint: {
+  hintWrap: {
     position: 'absolute',
-    bottom: 28,
-    color: 'rgba(255,255,255,0.6)',
-    fontSize: 13,
-    fontWeight: '600',
+    bottom: '18%',
+    left: 0,
+    right: 0,
+    alignItems: 'center',
+  },
+  hintPill: {
+    backgroundColor: theme.surface,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    shadowColor: 'rgba(20,20,30,0.2)',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  hint: {
+    color: theme.textPrimary,
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 1,
   },
 });

@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { theme } from '../theme';
 
 interface Props {
   title: string;
@@ -21,7 +22,7 @@ export function ScreenHeader({ title, onReset, resetLabel = 'Reset' }: Props) {
       </Pressable>
 
       <Text style={styles.title} numberOfLines={1}>
-        {title}
+        {title.toUpperCase()}
       </Text>
 
       {onReset ? (
@@ -55,32 +56,35 @@ const styles = StyleSheet.create({
     borderRadius: 22,
   },
   pressed: {
-    backgroundColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: 'rgba(24,24,28,0.06)',
   },
   backText: {
-    color: '#fff',
+    color: theme.textPrimary,
     fontSize: 30,
     lineHeight: 32,
     marginTop: -2,
   },
   title: {
-    color: '#fff',
-    fontSize: 17,
-    fontWeight: '700',
+    color: theme.textPrimary,
+    fontSize: 16,
+    fontWeight: '800',
+    letterSpacing: 1,
     flex: 1,
     textAlign: 'center',
   },
   resetBtn: {
-    paddingHorizontal: 12,
+    paddingHorizontal: 14,
     height: 36,
     alignItems: 'center',
     justifyContent: 'center',
     borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.14)',
+    backgroundColor: theme.surface,
+    borderWidth: 1,
+    borderColor: theme.pillBorder,
   },
   resetText: {
-    color: '#fff',
+    color: theme.textPrimary,
     fontSize: 13,
-    fontWeight: '600',
+    fontWeight: '700',
   },
 });

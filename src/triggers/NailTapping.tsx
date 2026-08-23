@@ -4,6 +4,7 @@ import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
 import { useSoundPool } from '../audio/useSoundPool';
 import { haptics } from '../haptics/haptics';
+import { glossyShadow, theme } from '../theme';
 import type { TriggerComponentProps } from '../screens/TriggerScreen';
 
 const NAIL_SOURCES = [
@@ -58,25 +59,29 @@ export default function NailTapping({ resetSignal }: TriggerComponentProps) {
 
   return (
     <View style={styles.container}>
-      <Svg style={StyleSheet.absoluteFill} width="100%" height="100%">
-        <Defs>
-          <LinearGradient id="deskGrad" x1="0" y1="0" x2="0" y2="1">
-            <Stop offset="0%" stopColor="#7a5230" />
-            <Stop offset="100%" stopColor="#4a3018" />
-          </LinearGradient>
-        </Defs>
-        <Rect x={0} y={0} width="100%" height="100%" rx={28} fill="url(#deskGrad)" />
-      </Svg>
+      <Text style={styles.counter}>{tapCount} TAPS</Text>
 
-      <Text style={styles.hint}>Tap each nail — fast, slow, or in rhythm</Text>
+      <View style={[styles.platform, glossyShadow]}>
+        <Svg style={StyleSheet.absoluteFill} width="100%" height="100%">
+          <Defs>
+            <LinearGradient id="deskGrad" x1="0" y1="0" x2="0" y2="1">
+              <Stop offset="0%" stopColor="#ffe6f0" />
+              <Stop offset="100%" stopColor="#f6c9dd" />
+            </LinearGradient>
+          </Defs>
+          <Rect x={0} y={0} width="100%" height="100%" rx={26} fill="url(#deskGrad)" />
+        </Svg>
 
-      <View style={styles.row}>
-        {NAIL_COLORS.map((color, i) => (
-          <Nail key={i} color={color} onTap={() => handleTap(i)} />
-        ))}
+        <View style={styles.row}>
+          {NAIL_COLORS.map((color, i) => (
+            <Nail key={i} color={color} onTap={() => handleTap(i)} />
+          ))}
+        </View>
       </View>
 
-      <Text style={styles.counter}>{tapCount} taps</Text>
+      <View style={styles.hintPill}>
+        <Text style={styles.hint}>TAP TO THE BEAT</Text>
+      </View>
     </View>
   );
 }
@@ -84,18 +89,23 @@ export default function NailTapping({ resetSignal }: TriggerComponentProps) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    margin: 16,
-    borderRadius: 28,
-    overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 22,
   },
-  hint: {
+  counter: {
     position: 'absolute',
-    top: 24,
-    color: 'rgba(255,255,255,0.75)',
-    fontSize: 14,
-    fontWeight: '600',
+    top: 8,
+    color: theme.textSecondary,
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 1,
+  },
+  platform: {
+    borderRadius: 26,
+    overflow: 'hidden',
+    paddingVertical: 24,
+    paddingHorizontal: 8,
   },
   row: {
     flexDirection: 'row',
@@ -104,17 +114,17 @@ const styles = StyleSheet.create({
   },
   nailTouchArea: {
     paddingHorizontal: 8,
-    paddingVertical: 20,
+    paddingVertical: 12,
   },
   finger: {
     width: 46,
     height: 120,
     borderRadius: 23,
-    backgroundColor: '#e8b98e',
+    backgroundColor: '#f3caa1',
     alignItems: 'center',
     paddingTop: 10,
     shadowColor: '#000',
-    shadowOpacity: 0.25,
+    shadowOpacity: 0.15,
     shadowOffset: { width: 0, height: 4 },
     shadowRadius: 6,
   },
@@ -131,13 +141,23 @@ const styles = StyleSheet.create({
     width: 10,
     height: 16,
     borderRadius: 6,
-    backgroundColor: 'rgba(255,255,255,0.45)',
+    backgroundColor: 'rgba(255,255,255,0.55)',
   },
-  counter: {
-    position: 'absolute',
-    bottom: 28,
-    color: 'rgba(255,255,255,0.6)',
-    fontSize: 13,
-    fontWeight: '600',
+  hintPill: {
+    backgroundColor: theme.surface,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    shadowColor: 'rgba(20,20,30,0.2)',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  hint: {
+    color: theme.textPrimary,
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 1,
   },
 });
