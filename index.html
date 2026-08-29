@@ -4,138 +4,43 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Bunny Bite</title>
-<meta name="description" content="A 3D bunny ice cream you can spin around — tap it for a crunchy bite.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<meta name="description" content="A 3D bunny ice cream you can spin around — tap it to take a bite.">
 <style>
   :root {
     color-scheme: light;
-    --page-bg: #cfe8d2;
-    --page-bg-2: #bfe0c6;
-    --case-bg: #fff8ec;
-    --case-border: #f1e2c4;
-    --text: #4a2e22;
-    --text-muted: #8a6a54;
-    --accent: #e14d72;
-    --mint: #4f9868;
-    --gold: #d9a441;
-    --shadow: rgba(48, 38, 20, 0.18);
+    --bg: #f4f4f5;
+    --spinner-track: rgba(0, 0, 0, 0.1);
+    --spinner-active: #444;
+    --text-muted: #8a8a90;
   }
 
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --page-bg: #16241c;
-      --page-bg-2: #101c16;
-      --case-bg: #2b1d16;
-      --case-border: #4a3626;
-      --text: #f3e6d6;
-      --text-muted: #cbb198;
-      --accent: #ff7a9c;
-      --mint: #8fd1a0;
-      --gold: #e8b860;
-      --shadow: rgba(0, 0, 0, 0.45);
+      --bg: #18181b;
+      --spinner-track: rgba(255, 255, 255, 0.12);
+      --spinner-active: #e4e4e7;
+      --text-muted: #9a9aa2;
     }
   }
 
   :root[data-theme="dark"] {
-    --page-bg: #16241c;
-    --page-bg-2: #101c16;
-    --case-bg: #2b1d16;
-    --case-border: #4a3626;
-    --text: #f3e6d6;
-    --text-muted: #cbb198;
-    --accent: #ff7a9c;
-    --mint: #8fd1a0;
-    --gold: #e8b860;
-    --shadow: rgba(0, 0, 0, 0.45);
+    --bg: #18181b;
+    --spinner-track: rgba(255, 255, 255, 0.12);
+    --spinner-active: #e4e4e7;
+    --text-muted: #9a9aa2;
   }
 
   * { box-sizing: border-box; }
 
   html, body {
     height: 100%;
-  }
-
-  body {
     margin: 0;
-    background: radial-gradient(120% 120% at 50% -10%, var(--page-bg-2), var(--page-bg));
-    color: var(--text);
-    font-family: "Nunito", ui-sans-serif, system-ui, sans-serif;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: clamp(16px, 4vw, 40px);
-    overflow-x: hidden;
-  }
-
-  .stage {
-    width: 100%;
-    max-width: 560px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 18px;
-  }
-
-  .shopmark {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    text-align: center;
-  }
-
-  .eyebrow {
-    font-family: "Nunito", sans-serif;
-    font-weight: 800;
-    font-size: 11.5px;
-    letter-spacing: 0.16em;
-    text-transform: uppercase;
-    color: var(--mint);
-  }
-
-  h1 {
-    font-family: "Fredoka", ui-rounded, sans-serif;
-    font-weight: 700;
-    font-size: clamp(2rem, 7vw, 2.9rem);
-    line-height: 1;
-    margin: 0;
-    color: var(--text);
-    text-wrap: balance;
-  }
-
-  h1 .dot {
-    color: var(--accent);
-  }
-
-  .case {
-    position: relative;
-    width: 100%;
-    aspect-ratio: 1 / 1;
-    max-height: min(62vh, 520px);
-    border-radius: 28px;
-    background:
-      radial-gradient(80% 70% at 50% 28%, color-mix(in srgb, var(--case-bg) 100%, white 6%), var(--case-bg) 72%);
-    border: 1px solid var(--case-border);
-    box-shadow:
-      0 30px 60px -20px var(--shadow),
-      inset 0 1px 0 rgba(255, 255, 255, 0.5);
     overflow: hidden;
-  }
-
-  .case::before {
-    /* thin gold display-case trim */
-    content: "";
-    position: absolute;
-    inset: 9px;
-    border-radius: 21px;
-    border: 1.5px solid color-mix(in srgb, var(--gold) 55%, transparent);
-    pointer-events: none;
+    background: var(--bg);
   }
 
   #canvas-wrap {
-    position: absolute;
+    position: fixed;
     inset: 0;
     cursor: grab;
     touch-action: none;
@@ -152,25 +57,24 @@
   }
 
   .loading {
-    position: absolute;
+    position: fixed;
     inset: 0;
     display: flex;
     align-items: center;
     justify-content: center;
     flex-direction: column;
-    gap: 10px;
-    font-family: "Fredoka", sans-serif;
-    font-weight: 600;
+    gap: 12px;
+    font: 14px system-ui, ui-sans-serif, sans-serif;
     color: var(--text-muted);
-    transition: opacity 0.35s ease;
+    transition: opacity 0.3s ease;
   }
 
-  .loading .scoop {
-    width: 34px;
-    height: 34px;
+  .loading .spinner {
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
-    border: 4px solid color-mix(in srgb, var(--accent) 30%, transparent);
-    border-top-color: var(--accent);
+    border: 3px solid var(--spinner-track);
+    border-top-color: var(--spinner-active);
     animation: spin 0.9s linear infinite;
   }
 
@@ -182,95 +86,15 @@
     opacity: 0;
     pointer-events: none;
   }
-
-  .tap-hint {
-    position: absolute;
-    left: 50%;
-    bottom: 16px;
-    transform: translateX(-50%);
-    font-family: "Nunito", sans-serif;
-    font-weight: 700;
-    font-size: 12.5px;
-    letter-spacing: 0.02em;
-    color: var(--text-muted);
-    background: color-mix(in srgb, var(--case-bg) 88%, transparent);
-    padding: 6px 12px;
-    border-radius: 999px;
-    border: 1px solid var(--case-border);
-    opacity: 1;
-    transition: opacity 0.4s ease;
-    white-space: nowrap;
-  }
-
-  .tap-hint.hidden {
-    opacity: 0;
-  }
-
-  .plaque {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 10px;
-    text-align: center;
-  }
-
-  .plaque-text {
-    font-family: "Fredoka", sans-serif;
-    font-weight: 600;
-    font-size: 1.15rem;
-    color: var(--text);
-    min-height: 1.4em;
-  }
-
-  .stage-dots {
-    display: flex;
-    gap: 8px;
-  }
-
-  .stage-dots span {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: color-mix(in srgb, var(--text-muted) 35%, transparent);
-    transition: background 0.3s ease, transform 0.3s ease;
-  }
-
-  .stage-dots span.filled {
-    background: var(--accent);
-    transform: scale(1.15);
-  }
-
-  @media (max-width: 380px) {
-    .case { border-radius: 22px; }
-  }
 </style>
 </head>
 <body>
 
-<div class="stage">
-  <div class="shopmark">
-    <span class="eyebrow">Bunny Creamery</span>
-    <h1>Bunny Bite<span class="dot">.</span></h1>
-  </div>
-
-  <div class="case" id="case">
-    <div id="canvas-wrap" role="button" tabindex="0" aria-label="Bunny ice cream, tap or press enter to take a bite">
-    </div>
-    <div class="loading" id="loading">
-      <div class="scoop"></div>
-      <span>scooping&hellip;</span>
-    </div>
-    <div class="tap-hint" id="tap-hint">tap the bunny for a bite</div>
-  </div>
-
-  <div class="plaque">
-    <div class="plaque-text" id="plaque-text">Fresh out of the freezer</div>
-    <div class="stage-dots" aria-hidden="true">
-      <span class="filled" id="dot-0"></span>
-      <span id="dot-1"></span>
-    </div>
-  </div>
+<div id="canvas-wrap" role="button" tabindex="0" aria-label="Bunny ice cream, tap or press enter to take a bite">
+</div>
+<div class="loading" id="loading">
+  <div class="spinner"></div>
+  <span>Loading…</span>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
@@ -283,30 +107,26 @@
   if (typeof THREE === "undefined" || !THREE.GLTFLoader || !THREE.OrbitControls) {
     var loadingFallback = document.getElementById("loading");
     if (loadingFallback) {
-      var scoopEl = loadingFallback.querySelector(".scoop");
+      var spinnerEl = loadingFallback.querySelector(".spinner");
       var textEl = loadingFallback.querySelector("span");
-      if (scoopEl) scoopEl.style.display = "none";
-      if (textEl) textEl.textContent = "couldn't load the 3D viewer — check your connection and reload";
+      if (spinnerEl) spinnerEl.style.display = "none";
+      if (textEl) textEl.textContent = "Couldn't load the 3D viewer — check your connection and reload.";
     }
     return;
   }
 
-  var MODEL_1_URL = "models/bunny1.glb";
-  var MODEL_2_URL = "models/bunny2.glb";
+  var MODEL_URLS = ["models/bunny1.glb", "models/bunny2.glb", "models/bunny3.glb"];
 
   var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   var wrap = document.getElementById("canvas-wrap");
   var loadingEl = document.getElementById("loading");
-  var tapHintEl = document.getElementById("tap-hint");
-  var plaqueText = document.getElementById("plaque-text");
-  var dot1 = document.getElementById("dot-1");
 
   // ---------- three.js scene ----------
   var scene = new THREE.Scene();
 
-  var camera = new THREE.PerspectiveCamera(35, 1, 0.05, 50);
-  camera.position.set(0, 0.55, 3.1);
+  var camera = new THREE.PerspectiveCamera(32, 1, 0.05, 50);
+  camera.position.set(0, 0.95, 3.6);
 
   var renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -315,19 +135,19 @@
   renderer.toneMappingExposure = 1.05;
   wrap.appendChild(renderer.domElement);
 
-  // Lighting: warm key + cool-ish fill + soft ambient, tuned for a cream/berry display case.
-  var hemi = new THREE.HemisphereLight(0xfff3df, 0x3a2a1c, 0.65);
+  // Simple three-point lighting, neutral enough to suit any background.
+  var hemi = new THREE.HemisphereLight(0xffffff, 0x3a3a3a, 0.65);
   scene.add(hemi);
 
-  var key = new THREE.DirectionalLight(0xfff1d6, 1.15);
+  var key = new THREE.DirectionalLight(0xfff4e0, 1.15);
   key.position.set(2.2, 3.4, 2.6);
   scene.add(key);
 
-  var fill = new THREE.DirectionalLight(0xdcefe0, 0.45);
+  var fill = new THREE.DirectionalLight(0xe0eaff, 0.4);
   fill.position.set(-2.6, 1.4, -1.8);
   scene.add(fill);
 
-  var rim = new THREE.DirectionalLight(0xffe0ea, 0.35);
+  var rim = new THREE.DirectionalLight(0xffffff, 0.3);
   rim.position.set(-0.6, 1.8, -3);
   scene.add(rim);
 
@@ -338,8 +158,8 @@
     c.width = c.height = size;
     var ctx = c.getContext("2d");
     var grad = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
-    grad.addColorStop(0, "rgba(0,0,0,0.35)");
-    grad.addColorStop(0.7, "rgba(0,0,0,0.14)");
+    grad.addColorStop(0, "rgba(0,0,0,0.32)");
+    grad.addColorStop(0.7, "rgba(0,0,0,0.12)");
     grad.addColorStop(1, "rgba(0,0,0,0)");
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, size, size);
@@ -348,10 +168,12 @@
     return tex;
   }
 
-  var shadowMesh = new THREE.Mesh(
-    new THREE.CircleGeometry(0.9, 48),
-    new THREE.MeshBasicMaterial({ map: makeShadowTexture(), transparent: true, depthWrite: false })
-  );
+  var shadowMaterial = new THREE.MeshBasicMaterial({
+    map: makeShadowTexture(),
+    transparent: true,
+    depthWrite: false,
+  });
+  var shadowMesh = new THREE.Mesh(new THREE.CircleGeometry(0.9, 48), shadowMaterial);
   shadowMesh.rotation.x = -Math.PI / 2;
   shadowMesh.position.y = 0.001;
   scene.add(shadowMesh);
@@ -361,19 +183,18 @@
   controls.enableDamping = true;
   controls.dampingFactor = 0.08;
   controls.enablePan = false;
-  controls.minDistance = 1.9;
-  controls.maxDistance = 4.2;
+  controls.minDistance = 2.2;
+  controls.maxDistance = 5;
   controls.minPolarAngle = Math.PI * 0.22;
   controls.maxPolarAngle = Math.PI * 0.62;
-  controls.target.set(0, 0.35, 0);
+  controls.target.set(0, 0.75, 0);
   controls.autoRotate = !reduceMotion;
   controls.autoRotateSpeed = 1.1;
   controls.update();
 
   function resize() {
-    var w = wrap.clientWidth;
-    var h = wrap.clientHeight;
-    if (!w || !h) return;
+    var w = window.innerWidth;
+    var h = window.innerHeight;
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
     renderer.setSize(w, h, false);
@@ -386,14 +207,13 @@
   var stageGroup = new THREE.Group();
   scene.add(stageGroup);
 
-  var current = null; // currently displayed Object3D
-  var cache = {};      // preloaded, framed Object3D for each stage (stage0, stage1)
+  var current = null; // currently displayed Object3D, or null once fully eaten
 
-  // The bite-stage models share one coordinate system (same authored height
-  // across all of them) — sizing each stage off its OWN bounding box would
-  // erase that relationship (later stages spread wider as they're eaten).
-  // So the scale factor is computed once from stage 0 and reused; only
-  // centering/floor placement is recomputed per model.
+  // The three bite-stage models share one coordinate system (same authored
+  // height across all of them) — sizing each stage off its OWN bounding box
+  // would erase that relationship (later stages spread wider as they're
+  // eaten). So the scale factor is computed once from stage 0 and reused;
+  // only centering/floor placement is recomputed per model.
   function computeScale(root) {
     var box = new THREE.Box3().setFromObject(root);
     var size = new THREE.Vector3();
@@ -445,20 +265,22 @@
     stageGroup.add(obj);
   }
 
-  var bitten = false;
-  var swapping = false;
+  var stages = []; // framed Object3D per bite stage, index 0..2
+  var stage = 0;   // 0 = whole, 1 = bitten once, 2 = bitten twice, 3 = fully eaten
+  var busy = false;
 
-  Promise.all([loadModel(MODEL_1_URL), loadModel(MODEL_2_URL)])
+  Promise.all(MODEL_URLS.map(loadModel))
     .then(function (models) {
       var scale = computeScale(models[0]);
-      cache.stage0 = frameModel(models[0], scale);
-      cache.stage1 = frameModel(models[1], scale);
-      showModel(cache.stage0);
+      stages = models.map(function (m) {
+        return frameModel(m, scale);
+      });
+      showModel(stages[0]);
       loadingEl.classList.add("hidden");
     })
     .catch(function (err) {
-      loadingEl.querySelector("span").textContent = "the freezer's stuck — reload?";
-      loadingEl.querySelector(".scoop").style.display = "none";
+      loadingEl.querySelector("span").textContent = "Couldn't load the 3D model — please reload the page.";
+      loadingEl.querySelector(".spinner").style.display = "none";
       console.error(err);
     });
 
@@ -511,9 +333,8 @@
   var downTime = 0;
 
   function setPointer(clientX, clientY) {
-    var rect = renderer.domElement.getBoundingClientRect();
-    pointer.x = ((clientX - rect.left) / rect.width) * 2 - 1;
-    pointer.y = -((clientY - rect.top) / rect.height) * 2 + 1;
+    pointer.x = (clientX / window.innerWidth) * 2 - 1;
+    pointer.y = -(clientY / window.innerHeight) * 2 + 1;
   }
 
   function hitsModel(clientX, clientY) {
@@ -553,23 +374,58 @@
     requestAnimationFrame(step);
   }
 
-  function bite() {
-    if (swapping || !cache.stage0 || !cache.stage1) return;
+  // The final bite has nothing to swap to — the model just shrinks away
+  // (toward its own base, since these models are authored with their local
+  // origin at the floor-contact point) while the contact shadow fades with it.
+  function eatAway(obj, onDone) {
+    if (reduceMotion) {
+      stageGroup.remove(obj);
+      shadowMesh.visible = false;
+      if (onDone) onDone();
+      return;
+    }
+    var start = performance.now();
+    var duration = 420;
+    var baseScale = obj.scale.x;
+    function step(now) {
+      var t = Math.min(1, (now - start) / duration);
+      var eased = t * t * t;
+      obj.scale.setScalar(Math.max(baseScale * (1 - eased), 0.0001));
+      shadowMaterial.opacity = 1 - eased;
+      if (t < 1) {
+        requestAnimationFrame(step);
+      } else {
+        stageGroup.remove(obj);
+        shadowMesh.visible = false;
+        if (onDone) onDone();
+      }
+    }
+    requestAnimationFrame(step);
+  }
 
-    if (!bitten) {
-      swapping = true;
-      tapHintEl.classList.add("hidden");
-      playMunch();
+  function bite() {
+    if (busy || stage >= 3 || stages.length < 3) return;
+    busy = true;
+    playMunch();
+
+    if (stage === 0) {
       squashBounce(current, function () {
-        showModel(cache.stage1);
-        bitten = true;
-        swapping = false;
-        plaqueText.textContent = "Someone took a bite!";
-        dot1.classList.add("filled");
+        showModel(stages[1]);
+        stage = 1;
+        busy = false;
       });
-    } else {
-      // already bitten — a friendly little wobble, nothing further happens
-      squashBounce(current, function () {});
+    } else if (stage === 1) {
+      squashBounce(current, function () {
+        showModel(stages[2]);
+        stage = 2;
+        busy = false;
+      });
+    } else if (stage === 2) {
+      eatAway(current, function () {
+        current = null;
+        stage = 3;
+        busy = false;
+      });
     }
   }
 
