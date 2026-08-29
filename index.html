@@ -323,12 +323,16 @@
       console.error(err);
     });
 
-  // ---------- eating sound (synthesized, no audio file needed) ----------
-  // Ice cream isn't crunchy, so this isn't a cracker-snap noise burst — it's
-  // a soft low "smack" (lips/mouth) immediately followed by a creamy,
-  // low-passed swell (the wet, muffled texture of a bite of something soft),
-  // rather than bright bandpassed noise which reads as dry/crunchy.
+  // ---------- eating sound ----------
+  // The real sound lives at sounds/eat.wav and is decoded into an
+  // AudioBuffer up front so playback on bite is instant (no per-tap
+  // network/decode latency). If it hasn't finished loading yet, or fails
+  // to load at all, playMunch() falls back to a synthesized placeholder
+  // (a soft "smack" + creamy swell) rather than staying silent.
+  var EAT_SOUND_URL = "sounds/eat.wav";
   var audioCtx = null;
+  var eatBuffer = null;
+  var eatBufferPromise = null;
 
   function ensureAudioContext() {
     if (!audioCtx) {
@@ -337,6 +341,33 @@
     }
     return audioCtx;
   }
+
+  function loadEatBuffer() {
+    if (eatBufferPromise) return eatBufferPromise;
+    var ctx = ensureAudioContext();
+    eatBufferPromise = fetch(EAT_SOUND_URL)
+      .then(function (res) {
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        return res.arrayBuffer();
+      })
+      .then(function (arrayBuffer) {
+        // decodeAudioData's callback form (rather than the promise form)
+        // is the one that works consistently across older WebKit/Safari.
+        return new Promise(function (resolve, reject) {
+          ctx.decodeAudioData(arrayBuffer, resolve, reject);
+        });
+      })
+      .then(function (buffer) {
+        eatBuffer = buffer;
+        return buffer;
+      })
+      .catch(function (e) {
+        console.error("eat.wav failed to load, will fall back to synthesized sound", e);
+        return null;
+      });
+    return eatBufferPromise;
+  }
+  loadEatBuffer();
 
   // Mobile Safari (and some other browsers) only fully unlocks a page's
   // audio the first time a sound is actually started from directly inside a
@@ -436,13 +467,26 @@
     noise.stop(t0 + dur + 0.02);
   }
 
+  function playEatBuffer(ctx, delaySeconds) {
+    var src = ctx.createBufferSource();
+    src.buffer = eatBuffer;
+    src.connect(ctx.destination);
+    src.start(ctx.currentTime + delaySeconds);
+  }
+
   function playMunch() {
     try {
       var ctx = ensureAudioContext();
 
       function scheduleBites() {
-        playSmack(ctx, 0);
-        playCreamySwell(ctx, 0.035);
+        if (eatBuffer) {
+          playEatBuffer(ctx, 0);
+        } else {
+          // Real sound isn't loaded yet (or failed to load) — better a
+          // placeholder than silence.
+          playSmack(ctx, 0);
+          playCreamySwell(ctx, 0.035);
+        }
       }
 
       // A freshly created (or backgrounded) context can start "suspended" —
