@@ -583,6 +583,17 @@
   // this (rather than separate mouse + touch listeners) avoids double-firing
   // bite() from a touch's synthetic compatibility mouse event.
   function onPointerDown(e) {
+    // Fire the unlock from the earliest possible event in the gesture
+    // (pointerdown, ahead of the document-level touchend/mousedown
+    // listeners below). That gives resume() a real window — the natural
+    // gap between finger-down and finger-up — to actually finish before
+    // playMunch() ever runs, so the sound on bite() is scheduled
+    // synchronously rather than deferred into a resume().then() callback.
+    // Safari can silently drop audio scheduled from inside that callback
+    // because it no longer counts as "inside" the user's tap by then,
+    // even though nothing throws — so avoiding it matters more than the
+    // frozen-clock issue that made that fallback path necessary at all.
+    unlockAudio();
     downPos = { x: e.clientX, y: e.clientY };
     downTime = performance.now();
   }
