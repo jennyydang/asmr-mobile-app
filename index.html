@@ -1,0 +1,618 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bunny Bite</title>
+<meta name="description" content="A 3D bunny ice cream you can spin around — tap it for a crunchy bite.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    color-scheme: light;
+    --page-bg: #cfe8d2;
+    --page-bg-2: #bfe0c6;
+    --case-bg: #fff8ec;
+    --case-border: #f1e2c4;
+    --text: #4a2e22;
+    --text-muted: #8a6a54;
+    --accent: #e14d72;
+    --mint: #4f9868;
+    --gold: #d9a441;
+    --shadow: rgba(48, 38, 20, 0.18);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --page-bg: #16241c;
+      --page-bg-2: #101c16;
+      --case-bg: #2b1d16;
+      --case-border: #4a3626;
+      --text: #f3e6d6;
+      --text-muted: #cbb198;
+      --accent: #ff7a9c;
+      --mint: #8fd1a0;
+      --gold: #e8b860;
+      --shadow: rgba(0, 0, 0, 0.45);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --page-bg: #16241c;
+    --page-bg-2: #101c16;
+    --case-bg: #2b1d16;
+    --case-border: #4a3626;
+    --text: #f3e6d6;
+    --text-muted: #cbb198;
+    --accent: #ff7a9c;
+    --mint: #8fd1a0;
+    --gold: #e8b860;
+    --shadow: rgba(0, 0, 0, 0.45);
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    height: 100%;
+  }
+
+  body {
+    margin: 0;
+    background: radial-gradient(120% 120% at 50% -10%, var(--page-bg-2), var(--page-bg));
+    color: var(--text);
+    font-family: "Nunito", ui-sans-serif, system-ui, sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: clamp(16px, 4vw, 40px);
+    overflow-x: hidden;
+  }
+
+  .stage {
+    width: 100%;
+    max-width: 560px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+  }
+
+  .shopmark {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    text-align: center;
+  }
+
+  .eyebrow {
+    font-family: "Nunito", sans-serif;
+    font-weight: 800;
+    font-size: 11.5px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--mint);
+  }
+
+  h1 {
+    font-family: "Fredoka", ui-rounded, sans-serif;
+    font-weight: 700;
+    font-size: clamp(2rem, 7vw, 2.9rem);
+    line-height: 1;
+    margin: 0;
+    color: var(--text);
+    text-wrap: balance;
+  }
+
+  h1 .dot {
+    color: var(--accent);
+  }
+
+  .case {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    max-height: min(62vh, 520px);
+    border-radius: 28px;
+    background:
+      radial-gradient(80% 70% at 50% 28%, color-mix(in srgb, var(--case-bg) 100%, white 6%), var(--case-bg) 72%);
+    border: 1px solid var(--case-border);
+    box-shadow:
+      0 30px 60px -20px var(--shadow),
+      inset 0 1px 0 rgba(255, 255, 255, 0.5);
+    overflow: hidden;
+  }
+
+  .case::before {
+    /* thin gold display-case trim */
+    content: "";
+    position: absolute;
+    inset: 9px;
+    border-radius: 21px;
+    border: 1.5px solid color-mix(in srgb, var(--gold) 55%, transparent);
+    pointer-events: none;
+  }
+
+  #canvas-wrap {
+    position: absolute;
+    inset: 0;
+    cursor: grab;
+    touch-action: none;
+  }
+
+  #canvas-wrap:active {
+    cursor: grabbing;
+  }
+
+  #canvas-wrap canvas {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  .loading {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 10px;
+    font-family: "Fredoka", sans-serif;
+    font-weight: 600;
+    color: var(--text-muted);
+    transition: opacity 0.35s ease;
+  }
+
+  .loading .scoop {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 4px solid color-mix(in srgb, var(--accent) 30%, transparent);
+    border-top-color: var(--accent);
+    animation: spin 0.9s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .loading.hidden {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .tap-hint {
+    position: absolute;
+    left: 50%;
+    bottom: 16px;
+    transform: translateX(-50%);
+    font-family: "Nunito", sans-serif;
+    font-weight: 700;
+    font-size: 12.5px;
+    letter-spacing: 0.02em;
+    color: var(--text-muted);
+    background: color-mix(in srgb, var(--case-bg) 88%, transparent);
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--case-border);
+    opacity: 1;
+    transition: opacity 0.4s ease;
+    white-space: nowrap;
+  }
+
+  .tap-hint.hidden {
+    opacity: 0;
+  }
+
+  .plaque {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    text-align: center;
+  }
+
+  .plaque-text {
+    font-family: "Fredoka", sans-serif;
+    font-weight: 600;
+    font-size: 1.15rem;
+    color: var(--text);
+    min-height: 1.4em;
+  }
+
+  .stage-dots {
+    display: flex;
+    gap: 8px;
+  }
+
+  .stage-dots span {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--text-muted) 35%, transparent);
+    transition: background 0.3s ease, transform 0.3s ease;
+  }
+
+  .stage-dots span.filled {
+    background: var(--accent);
+    transform: scale(1.15);
+  }
+
+  @media (max-width: 380px) {
+    .case { border-radius: 22px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <div class="shopmark">
+    <span class="eyebrow">Bunny Creamery</span>
+    <h1>Bunny Bite<span class="dot">.</span></h1>
+  </div>
+
+  <div class="case" id="case">
+    <div id="canvas-wrap" role="button" tabindex="0" aria-label="Bunny ice cream, tap or press enter to take a bite">
+    </div>
+    <div class="loading" id="loading">
+      <div class="scoop"></div>
+      <span>scooping&hellip;</span>
+    </div>
+    <div class="tap-hint" id="tap-hint">tap the bunny for a bite</div>
+  </div>
+
+  <div class="plaque">
+    <div class="plaque-text" id="plaque-text">Fresh out of the freezer</div>
+    <div class="stage-dots" aria-hidden="true">
+      <span class="filled" id="dot-0"></span>
+      <span id="dot-1"></span>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  if (typeof THREE === "undefined" || !THREE.GLTFLoader || !THREE.OrbitControls) {
+    var loadingFallback = document.getElementById("loading");
+    if (loadingFallback) {
+      var scoopEl = loadingFallback.querySelector(".scoop");
+      var textEl = loadingFallback.querySelector("span");
+      if (scoopEl) scoopEl.style.display = "none";
+      if (textEl) textEl.textContent = "couldn't load the 3D viewer — check your connection and reload";
+    }
+    return;
+  }
+
+  var MODEL_1_URL = "models/bunny1.glb";
+  var MODEL_2_URL = "models/bunny2.glb";
+
+  var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  var wrap = document.getElementById("canvas-wrap");
+  var loadingEl = document.getElementById("loading");
+  var tapHintEl = document.getElementById("tap-hint");
+  var plaqueText = document.getElementById("plaque-text");
+  var dot1 = document.getElementById("dot-1");
+
+  // ---------- three.js scene ----------
+  var scene = new THREE.Scene();
+
+  var camera = new THREE.PerspectiveCamera(35, 1, 0.05, 50);
+  camera.position.set(0, 0.55, 3.1);
+
+  var renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.05;
+  wrap.appendChild(renderer.domElement);
+
+  // Lighting: warm key + cool-ish fill + soft ambient, tuned for a cream/berry display case.
+  var hemi = new THREE.HemisphereLight(0xfff3df, 0x3a2a1c, 0.65);
+  scene.add(hemi);
+
+  var key = new THREE.DirectionalLight(0xfff1d6, 1.15);
+  key.position.set(2.2, 3.4, 2.6);
+  scene.add(key);
+
+  var fill = new THREE.DirectionalLight(0xdcefe0, 0.45);
+  fill.position.set(-2.6, 1.4, -1.8);
+  scene.add(fill);
+
+  var rim = new THREE.DirectionalLight(0xffe0ea, 0.35);
+  rim.position.set(-0.6, 1.8, -3);
+  scene.add(rim);
+
+  // Soft contact shadow (a radial-gradient texture on a flat circle) instead of real shadow maps.
+  function makeShadowTexture() {
+    var size = 256;
+    var c = document.createElement("canvas");
+    c.width = c.height = size;
+    var ctx = c.getContext("2d");
+    var grad = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+    grad.addColorStop(0, "rgba(0,0,0,0.35)");
+    grad.addColorStop(0.7, "rgba(0,0,0,0.14)");
+    grad.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, size, size);
+    var tex = new THREE.CanvasTexture(c);
+    tex.encoding = THREE.sRGBEncoding;
+    return tex;
+  }
+
+  var shadowMesh = new THREE.Mesh(
+    new THREE.CircleGeometry(0.9, 48),
+    new THREE.MeshBasicMaterial({ map: makeShadowTexture(), transparent: true, depthWrite: false })
+  );
+  shadowMesh.rotation.x = -Math.PI / 2;
+  shadowMesh.position.y = 0.001;
+  scene.add(shadowMesh);
+
+  // ---------- controls ----------
+  var controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+  controls.enablePan = false;
+  controls.minDistance = 1.9;
+  controls.maxDistance = 4.2;
+  controls.minPolarAngle = Math.PI * 0.22;
+  controls.maxPolarAngle = Math.PI * 0.62;
+  controls.target.set(0, 0.35, 0);
+  controls.autoRotate = !reduceMotion;
+  controls.autoRotateSpeed = 1.1;
+  controls.update();
+
+  function resize() {
+    var w = wrap.clientWidth;
+    var h = wrap.clientHeight;
+    if (!w || !h) return;
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    renderer.setSize(w, h, false);
+  }
+  window.addEventListener("resize", resize);
+  resize();
+
+  // ---------- model loading ----------
+  var loader = new THREE.GLTFLoader();
+  var stageGroup = new THREE.Group();
+  scene.add(stageGroup);
+
+  var current = null; // currently displayed Object3D
+  var cache = {};      // preloaded, framed Object3D for each stage (stage0, stage1)
+
+  // The bite-stage models share one coordinate system (same authored height
+  // across all of them) — sizing each stage off its OWN bounding box would
+  // erase that relationship (later stages spread wider as they're eaten).
+  // So the scale factor is computed once from stage 0 and reused; only
+  // centering/floor placement is recomputed per model.
+  function computeScale(root) {
+    var box = new THREE.Box3().setFromObject(root);
+    var size = new THREE.Vector3();
+    box.getSize(size);
+    var maxDim = Math.max(size.x, size.y, size.z) || 1;
+    return 1.7 / maxDim;
+  }
+
+  function frameModel(root, scale) {
+    root.scale.setScalar(scale);
+
+    var box = new THREE.Box3().setFromObject(root);
+    var center = new THREE.Vector3();
+    box.getCenter(center);
+    var minY = box.min.y;
+    root.position.x -= center.x;
+    root.position.z -= center.z;
+    root.position.y -= minY;
+
+    root.traverse(function (node) {
+      if (node.isMesh) {
+        node.castShadow = false;
+        node.receiveShadow = false;
+        if (node.material) {
+          node.material.envMapIntensity = 1.0;
+        }
+      }
+    });
+
+    return root;
+  }
+
+  function loadModel(url) {
+    return new Promise(function (resolve, reject) {
+      loader.load(
+        url,
+        function (gltf) {
+          resolve(gltf.scene);
+        },
+        undefined,
+        reject
+      );
+    });
+  }
+
+  function showModel(obj) {
+    if (current) stageGroup.remove(current);
+    current = obj;
+    stageGroup.add(obj);
+  }
+
+  var bitten = false;
+  var swapping = false;
+
+  Promise.all([loadModel(MODEL_1_URL), loadModel(MODEL_2_URL)])
+    .then(function (models) {
+      var scale = computeScale(models[0]);
+      cache.stage0 = frameModel(models[0], scale);
+      cache.stage1 = frameModel(models[1], scale);
+      showModel(cache.stage0);
+      loadingEl.classList.add("hidden");
+    })
+    .catch(function (err) {
+      loadingEl.querySelector("span").textContent = "the freezer's stuck — reload?";
+      loadingEl.querySelector(".scoop").style.display = "none";
+      console.error(err);
+    });
+
+  // ---------- munch sound (synthesized, no audio file needed) ----------
+  var audioCtx = null;
+  function playMunch() {
+    try {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === "suspended") audioCtx.resume();
+      var now = audioCtx.currentTime;
+      var bites = 2;
+      for (var i = 0; i < bites; i++) {
+        var t0 = now + i * 0.115;
+        var dur = 0.1;
+        var bufferSize = Math.floor(audioCtx.sampleRate * dur);
+        var buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+        var data = buffer.getChannelData(0);
+        for (var j = 0; j < bufferSize; j++) {
+          var env = Math.pow(1 - j / bufferSize, 2.2);
+          data[j] = (Math.random() * 2 - 1) * env;
+        }
+        var noise = audioCtx.createBufferSource();
+        noise.buffer = buffer;
+
+        var bandpass = audioCtx.createBiquadFilter();
+        bandpass.type = "bandpass";
+        bandpass.frequency.value = 850 + Math.random() * 600;
+        bandpass.Q.value = 0.8;
+
+        var gain = audioCtx.createGain();
+        gain.gain.setValueAtTime(0.0001, t0);
+        gain.gain.exponentialRampToValueAtTime(0.85, t0 + 0.008);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+
+        noise.connect(bandpass);
+        bandpass.connect(gain);
+        gain.connect(audioCtx.destination);
+        noise.start(t0);
+        noise.stop(t0 + dur + 0.02);
+      }
+    } catch (e) {
+      console.error("munch sound failed", e);
+    }
+  }
+
+  // ---------- bite interaction ----------
+  var raycaster = new THREE.Raycaster();
+  var pointer = new THREE.Vector2();
+  var downPos = null;
+  var downTime = 0;
+
+  function setPointer(clientX, clientY) {
+    var rect = renderer.domElement.getBoundingClientRect();
+    pointer.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+    pointer.y = -((clientY - rect.top) / rect.height) * 2 + 1;
+  }
+
+  function hitsModel(clientX, clientY) {
+    if (!current) return false;
+    setPointer(clientX, clientY);
+    raycaster.setFromCamera(pointer, camera);
+    var hits = raycaster.intersectObject(current, true);
+    return hits.length > 0;
+  }
+
+  function squashBounce(obj, onDone) {
+    if (reduceMotion) {
+      if (onDone) onDone();
+      return;
+    }
+    var start = performance.now();
+    var duration = 260;
+    var baseScale = obj.scale.x;
+    function step(now) {
+      var t = Math.min(1, (now - start) / duration);
+      var s;
+      if (t < 0.35) {
+        s = baseScale * (1 - 0.22 * (t / 0.35));
+      } else {
+        var t2 = (t - 0.35) / 0.65;
+        var bounce = Math.sin(t2 * Math.PI) * 0.09;
+        s = baseScale * (0.78 + 0.22 * t2 + bounce);
+      }
+      obj.scale.setScalar(s);
+      if (t < 1) {
+        requestAnimationFrame(step);
+      } else {
+        obj.scale.setScalar(baseScale);
+        if (onDone) onDone();
+      }
+    }
+    requestAnimationFrame(step);
+  }
+
+  function bite() {
+    if (swapping || !cache.stage0 || !cache.stage1) return;
+
+    if (!bitten) {
+      swapping = true;
+      tapHintEl.classList.add("hidden");
+      playMunch();
+      squashBounce(current, function () {
+        showModel(cache.stage1);
+        bitten = true;
+        swapping = false;
+        plaqueText.textContent = "Someone took a bite!";
+        dot1.classList.add("filled");
+      });
+    } else {
+      // already bitten — a friendly little wobble, nothing further happens
+      squashBounce(current, function () {});
+    }
+  }
+
+  // Pointer Events unify mouse/touch/pen in one event stream — using only
+  // this (rather than separate mouse + touch listeners) avoids double-firing
+  // bite() from a touch's synthetic compatibility mouse event.
+  function onPointerDown(e) {
+    downPos = { x: e.clientX, y: e.clientY };
+    downTime = performance.now();
+  }
+
+  function onPointerUp(e) {
+    if (!downPos) return;
+    var dx = e.clientX - downPos.x;
+    var dy = e.clientY - downPos.y;
+    var moved = Math.sqrt(dx * dx + dy * dy);
+    var elapsed = performance.now() - downTime;
+    downPos = null;
+    if (moved < 6 && elapsed < 500 && hitsModel(e.clientX, e.clientY)) {
+      bite();
+    }
+  }
+
+  wrap.addEventListener("pointerdown", onPointerDown);
+  wrap.addEventListener("pointerup", onPointerUp);
+  wrap.addEventListener("pointercancel", function () {
+    downPos = null;
+  });
+  wrap.addEventListener("keydown", function (e) {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      bite();
+    }
+  });
+
+  // ---------- render loop ----------
+  function animate() {
+    requestAnimationFrame(animate);
+    controls.update(); // also advances autoRotate
+    renderer.render(scene, camera);
+  }
+  requestAnimationFrame(animate);
+})();
+</script>
+</body>
+</html>
