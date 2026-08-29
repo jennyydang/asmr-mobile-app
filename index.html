@@ -330,6 +330,41 @@
   // rather than bright bandpassed noise which reads as dry/crunchy.
   var audioCtx = null;
 
+  function ensureAudioContext() {
+    if (!audioCtx) {
+      var Ctx = window.AudioContext || window.webkitAudioContext;
+      audioCtx = new Ctx();
+    }
+    return audioCtx;
+  }
+
+  // Mobile Safari (and some other browsers) only fully unlocks a page's
+  // audio the first time a sound is actually started from directly inside a
+  // trusted user-gesture event — playing on the very first tap can still
+  // come out silent if that context wasn't "warmed up" first. Unlocking as
+  // early as possible, on ANY qualifying first gesture anywhere on the
+  // page (not just a hit on the model), makes sure the real bite sound
+  // that follows is never the one doing double duty as the unlock.
+  var audioUnlocked = false;
+  function unlockAudio() {
+    if (audioUnlocked) return;
+    audioUnlocked = true;
+    try {
+      var ctx = ensureAudioContext();
+      if (ctx.state === "suspended") ctx.resume();
+      var silence = ctx.createBuffer(1, 1, ctx.sampleRate);
+      var src = ctx.createBufferSource();
+      src.buffer = silence;
+      src.connect(ctx.destination);
+      src.start(0);
+    } catch (e) {
+      console.error("audio unlock failed", e);
+    }
+  }
+  ["touchend", "mousedown", "keydown"].forEach(function (evt) {
+    document.addEventListener(evt, unlockAudio, { once: true, passive: true });
+  });
+
   function playSmack(ctx, delaySeconds) {
     var dur = 0.055;
     var t0 = ctx.currentTime + delaySeconds;
@@ -403,11 +438,7 @@
 
   function playMunch() {
     try {
-      if (!audioCtx) {
-        var Ctx = window.AudioContext || window.webkitAudioContext;
-        audioCtx = new Ctx();
-      }
-      var ctx = audioCtx;
+      var ctx = ensureAudioContext();
 
       function scheduleBites() {
         playSmack(ctx, 0);
