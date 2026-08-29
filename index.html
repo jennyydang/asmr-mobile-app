@@ -209,11 +209,19 @@
 
   var current = null; // currently displayed Object3D, or null once fully eaten
 
-  // The three bite-stage models share one coordinate system (same authored
-  // height across all of them) — sizing each stage off its OWN bounding box
-  // would erase that relationship (later stages spread wider as they're
-  // eaten). So the scale factor is computed once from stage 0 and reused;
-  // only centering/floor placement is recomputed per model.
+  // These three bite-stage models are independent Tripo AI generations, not
+  // three edits of one shared mesh — each one gets auto-normalized to its
+  // own canonical bounding box on export, so all three report almost the
+  // exact same overall height even though the actual cone underneath is a
+  // different real width in each (stage 3's cone measures ~65% wider per
+  // unit of height than stage 1's, verified by fitting the cone's taper).
+  // Scaling every stage to the same bounding-box height therefore makes the
+  // untouched cone visibly balloon and shrink between bites. These
+  // corrections were measured directly against each model's actual cone
+  // taper (radius vs. height, sampled just above the tip, well below where
+  // the scoop starts) so the part that's supposed to stay put actually does.
+  var STAGE_SCALE_CORRECTION = [1, 0.905, 0.607];
+
   function computeScale(root) {
     var box = new THREE.Box3().setFromObject(root);
     var size = new THREE.Vector3();
@@ -271,9 +279,9 @@
 
   Promise.all(MODEL_URLS.map(loadModel))
     .then(function (models) {
-      var scale = computeScale(models[0]);
-      stages = models.map(function (m) {
-        return frameModel(m, scale);
+      var baseScale = computeScale(models[0]);
+      stages = models.map(function (m, i) {
+        return frameModel(m, baseScale * STAGE_SCALE_CORRECTION[i]);
       });
       showModel(stages[0]);
       loadingEl.classList.add("hidden");
