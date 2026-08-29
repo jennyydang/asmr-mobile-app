@@ -323,34 +323,79 @@
       console.error(err);
     });
 
-  // ---------- munch sound (synthesized, no audio file needed) ----------
+  // ---------- eating sound (synthesized, no audio file needed) ----------
+  // Ice cream isn't crunchy, so this isn't a cracker-snap noise burst — it's
+  // a soft low "smack" (lips/mouth) immediately followed by a creamy,
+  // low-passed swell (the wet, muffled texture of a bite of something soft),
+  // rather than bright bandpassed noise which reads as dry/crunchy.
   var audioCtx = null;
 
-  function playBiteBurst(ctx, delaySeconds) {
-    var dur = 0.1;
+  function playSmack(ctx, delaySeconds) {
+    var dur = 0.055;
+    var t0 = ctx.currentTime + delaySeconds;
+
+    // low thump — the "mouth" part of the smack
+    var osc = ctx.createOscillator();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(210, t0);
+    osc.frequency.exponentialRampToValueAtTime(85, t0 + dur);
+    var oscGain = ctx.createGain();
+    oscGain.gain.setValueAtTime(0.0001, t0);
+    oscGain.gain.exponentialRampToValueAtTime(0.55, t0 + 0.006);
+    oscGain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    osc.connect(oscGain);
+    oscGain.connect(ctx.destination);
+    osc.start(t0);
+    osc.stop(t0 + dur + 0.02);
+
+    // a little breathy noise layered on top for the "lip" texture
     var bufferSize = Math.floor(ctx.sampleRate * dur);
     var buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
     var data = buffer.getChannelData(0);
     for (var j = 0; j < bufferSize; j++) {
-      var env = Math.pow(1 - j / bufferSize, 2.2);
-      data[j] = (Math.random() * 2 - 1) * env;
+      data[j] = (Math.random() * 2 - 1) * Math.pow(1 - j / bufferSize, 3);
+    }
+    var noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+    var lp = ctx.createBiquadFilter();
+    lp.type = "lowpass";
+    lp.frequency.value = 1000;
+    var noiseGain = ctx.createGain();
+    noiseGain.gain.setValueAtTime(0.0001, t0);
+    noiseGain.gain.exponentialRampToValueAtTime(0.25, t0 + 0.004);
+    noiseGain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    noise.connect(lp);
+    lp.connect(noiseGain);
+    noiseGain.connect(ctx.destination);
+    noise.start(t0);
+    noise.stop(t0 + dur + 0.02);
+  }
+
+  function playCreamySwell(ctx, delaySeconds) {
+    var dur = 0.2;
+    var t0 = ctx.currentTime + delaySeconds;
+    var bufferSize = Math.floor(ctx.sampleRate * dur);
+    var buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    var data = buffer.getChannelData(0);
+    for (var j = 0; j < bufferSize; j++) {
+      var x = j / bufferSize;
+      var envelope = Math.sin(Math.PI * x); // smooth rise and fall, not a sharp snap
+      data[j] = (Math.random() * 2 - 1) * envelope;
     }
     var noise = ctx.createBufferSource();
     noise.buffer = buffer;
 
-    var bandpass = ctx.createBiquadFilter();
-    bandpass.type = "bandpass";
-    bandpass.frequency.value = 850 + Math.random() * 600;
-    bandpass.Q.value = 0.8;
+    var lp = ctx.createBiquadFilter();
+    lp.type = "lowpass";
+    lp.frequency.setValueAtTime(650, t0);
+    lp.frequency.linearRampToValueAtTime(320, t0 + dur); // dulls further, like it's melting/wet
+    lp.Q.value = 0.4;
 
     var gain = ctx.createGain();
-    var t0 = ctx.currentTime + delaySeconds;
-    gain.gain.setValueAtTime(0.0001, t0);
-    gain.gain.exponentialRampToValueAtTime(0.9, t0 + 0.008);
-    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    gain.gain.value = 0.6;
 
-    noise.connect(bandpass);
-    bandpass.connect(gain);
+    noise.connect(lp);
+    lp.connect(gain);
     gain.connect(ctx.destination);
     noise.start(t0);
     noise.stop(t0 + dur + 0.02);
@@ -365,13 +410,13 @@
       var ctx = audioCtx;
 
       function scheduleBites() {
-        playBiteBurst(ctx, 0);
-        playBiteBurst(ctx, 0.115);
+        playSmack(ctx, 0);
+        playCreamySwell(ctx, 0.035);
       }
 
       // A freshly created (or backgrounded) context can start "suspended" —
       // resume() is async, so currentTime stays frozen until it resolves.
-      // Scheduling bursts before that resolves was the bug that made this
+      // Scheduling sounds before that resolves was the bug that made this
       // silent on some browsers: wait for the real, running clock first.
       if (ctx.state === "suspended") {
         ctx.resume().then(scheduleBites, function (e) {
@@ -381,7 +426,7 @@
         scheduleBites();
       }
     } catch (e) {
-      console.error("munch sound failed", e);
+      console.error("eating sound failed", e);
     }
   }
 
