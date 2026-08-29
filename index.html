@@ -294,40 +294,60 @@
 
   // ---------- munch sound (synthesized, no audio file needed) ----------
   var audioCtx = null;
+
+  function playBiteBurst(ctx, delaySeconds) {
+    var dur = 0.1;
+    var bufferSize = Math.floor(ctx.sampleRate * dur);
+    var buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    var data = buffer.getChannelData(0);
+    for (var j = 0; j < bufferSize; j++) {
+      var env = Math.pow(1 - j / bufferSize, 2.2);
+      data[j] = (Math.random() * 2 - 1) * env;
+    }
+    var noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+
+    var bandpass = ctx.createBiquadFilter();
+    bandpass.type = "bandpass";
+    bandpass.frequency.value = 850 + Math.random() * 600;
+    bandpass.Q.value = 0.8;
+
+    var gain = ctx.createGain();
+    var t0 = ctx.currentTime + delaySeconds;
+    gain.gain.setValueAtTime(0.0001, t0);
+    gain.gain.exponentialRampToValueAtTime(0.9, t0 + 0.008);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+
+    noise.connect(bandpass);
+    bandpass.connect(gain);
+    gain.connect(ctx.destination);
+    noise.start(t0);
+    noise.stop(t0 + dur + 0.02);
+  }
+
   function playMunch() {
     try {
-      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      if (audioCtx.state === "suspended") audioCtx.resume();
-      var now = audioCtx.currentTime;
-      var bites = 2;
-      for (var i = 0; i < bites; i++) {
-        var t0 = now + i * 0.115;
-        var dur = 0.1;
-        var bufferSize = Math.floor(audioCtx.sampleRate * dur);
-        var buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
-        var data = buffer.getChannelData(0);
-        for (var j = 0; j < bufferSize; j++) {
-          var env = Math.pow(1 - j / bufferSize, 2.2);
-          data[j] = (Math.random() * 2 - 1) * env;
-        }
-        var noise = audioCtx.createBufferSource();
-        noise.buffer = buffer;
+      if (!audioCtx) {
+        var Ctx = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new Ctx();
+      }
+      var ctx = audioCtx;
 
-        var bandpass = audioCtx.createBiquadFilter();
-        bandpass.type = "bandpass";
-        bandpass.frequency.value = 850 + Math.random() * 600;
-        bandpass.Q.value = 0.8;
+      function scheduleBites() {
+        playBiteBurst(ctx, 0);
+        playBiteBurst(ctx, 0.115);
+      }
 
-        var gain = audioCtx.createGain();
-        gain.gain.setValueAtTime(0.0001, t0);
-        gain.gain.exponentialRampToValueAtTime(0.85, t0 + 0.008);
-        gain.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
-
-        noise.connect(bandpass);
-        bandpass.connect(gain);
-        gain.connect(audioCtx.destination);
-        noise.start(t0);
-        noise.stop(t0 + dur + 0.02);
+      // A freshly created (or backgrounded) context can start "suspended" —
+      // resume() is async, so currentTime stays frozen until it resolves.
+      // Scheduling bursts before that resolves was the bug that made this
+      // silent on some browsers: wait for the real, running clock first.
+      if (ctx.state === "suspended") {
+        ctx.resume().then(scheduleBites, function (e) {
+          console.error("audio resume failed", e);
+        });
+      } else {
+        scheduleBites();
       }
     } catch (e) {
       console.error("munch sound failed", e);
@@ -382,29 +402,28 @@
     requestAnimationFrame(step);
   }
 
-  // The final bite has nothing to swap to — the model just shrinks away
-  // (toward its own base, since these models are authored with their local
-  // origin at the floor-contact point) while the contact shadow fades with it.
+  // The final bite has nothing to swap to — it just pops out of existence:
+  // a quick punch of scale (not a gradual shrink), then gone.
   function eatAway(obj, onDone) {
+    shadowMesh.visible = false;
+
     if (reduceMotion) {
       stageGroup.remove(obj);
-      shadowMesh.visible = false;
       if (onDone) onDone();
       return;
     }
+
     var start = performance.now();
-    var duration = 420;
+    var duration = 110;
     var baseScale = obj.scale.x;
     function step(now) {
       var t = Math.min(1, (now - start) / duration);
-      var eased = t * t * t;
-      obj.scale.setScalar(Math.max(baseScale * (1 - eased), 0.0001));
-      shadowMaterial.opacity = 1 - eased;
+      var punch = 1 + Math.sin(t * Math.PI) * 0.18;
+      obj.scale.setScalar(baseScale * punch);
       if (t < 1) {
         requestAnimationFrame(step);
       } else {
         stageGroup.remove(obj);
-        shadowMesh.visible = false;
         if (onDone) onDone();
       }
     }
